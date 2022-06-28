@@ -3,6 +3,7 @@ package main.qoi
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
 import java.io.File
+import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 
 
@@ -11,9 +12,9 @@ import javax.imageio.ImageIO
  * The only two types of color spaces that accepted in a QOI header are:
  * sRGB with linear alpha or all channels linear
  */
-enum class QoiColorSpace(val code: UByte) {
-    sRGB(1.toUByte()),
-    LINEAR(1.toUByte())
+enum class QoiColorSpace(val code: Byte) {
+    sRGB(0x00),
+    LINEAR(0x01)
 }
 
 /**
@@ -25,7 +26,22 @@ enum class QoiColorSpace(val code: UByte) {
  * @param colorSpace: The color space of the image -
  *                    i.e., either sRGB with linear alpha or all channels linear
  */
-data class Image(val pixels: UByteArray, val width: Int, val height: Int, val colorSpace: QoiColorSpace = QoiColorSpace.sRGB) {
+data class Image(val pixels: UByteArray, val width: Int, val height: Int, val channels: Int, val colorSpace: QoiColorSpace = QoiColorSpace.sRGB) {
+    val size = pixels.size
+
+    private fun getHeader(): ByteArray {
+        val header = ByteBuffer.allocate(14)
+        header.putInt(QOICodec.QOI_MAGIC)
+        header.putInt(width)
+        header.putInt(height)
+        header.put(channels.toByte())
+        header.put(colorSpace.code)
+
+        return header.array()
+    }
+
+    val qoiHeader = getHeader()
+
     companion object Reader {
         /**
          * Loads an image from a file into a new Image object
@@ -35,7 +51,11 @@ data class Image(val pixels: UByteArray, val width: Int, val height: Int, val co
             val image: BufferedImage = ImageIO.read(File(imagePath))
             val pixels: ByteArray = (image.raster.dataBuffer as DataBufferByte).data
 
-            return Image(pixels.toUByteArray(), image.width, image.height)
+            return Image(
+                pixels = pixels.toUByteArray(),
+                width = image.width, height = image.height,
+                channels = image.sampleModel.numBands
+            )
         }
     }
 }

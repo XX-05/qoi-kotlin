@@ -13,7 +13,7 @@ internal object QOICodec {
     const val QOI_OP_RGB = 0xFE
     const val QOI_OP_RGBA = 0xFF
     const val QOI_MASK_2 = 0xC0
-    const val QOI_MAGIC = 'q'.code shl 24 or ('o'.code shl 16) or ('i'.code shl 8) or 'f'.code
+    const val QOI_MAGIC = 0x716f6966 // bytes for 'qoif'
 
     // Seven 0x00 bytes followed by 0x01
     val QOI_ENDF = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 1)
