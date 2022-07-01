@@ -16,5 +16,5 @@ internal object QOICodec {
     const val QOI_MAGIC = 0x716f6966 // bytes for 'qoif'
 
     // Seven 0x00 bytes followed by 0x01
-    val QOI_ENDF = byteArrayOf(0, 0, 0, 0, 0, 0, 0, 1)
+    val QOI_ENDF = 0x1
 }
