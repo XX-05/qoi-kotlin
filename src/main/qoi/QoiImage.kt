@@ -23,6 +23,15 @@ enum class QoiColorSpace(val code: Byte) {
 data class QoiPixel(val r: UByte, val g: UByte, val b: UByte, val a: UByte = 0xFF.toUByte()) {
     val hash = (r.toInt() * 3 + g.toInt() * 5 + b.toInt() * 7 + a.toInt() * 11) % 64
     val bytes = byteArrayOf(r.toByte(), g.toByte(), b.toByte(), a.toByte()) // TODO: Figure out how to make this only rgb when the image has no alpha
+
+    operator fun minus(pixel: QoiPixel): QoiPixel {
+        return QoiPixel(
+            (r - pixel.r).toUByte(),
+            (g - pixel.g).toUByte(),
+            (b - pixel.b).toUByte(),
+            (a - pixel.a).toUByte()
+        )
+    }
 }
 
 /**
