@@ -8,21 +8,19 @@ import javax.imageio.ImageIO
 
 
 /**
- * Color spaces that can be encoded in QOI.
- * The only two types of color spaces that accepted in a QOI header are:
- * sRGB with linear alpha or all channels linear
- */
-enum class QoiColorSpace(val code: Byte) {
-    sRGB(0x00),
-    LINEAR(0x01)
-}
-
-/**
  * A single rgb(a) pixel of an image
  */
-data class QoiPixel(val r: UByte, val g: UByte, val b: UByte, val a: UByte = 0xFF.toUByte()) {
-    val hash = (r.toInt() * 3 + g.toInt() * 5 + b.toInt() * 7 + a.toInt() * 11) % 64
-    val bytes = byteArrayOf(r.toByte(), g.toByte(), b.toByte(), a.toByte()) // TODO: Figure out how to make this only rgb when the image has no alpha
+data class QoiPixel(
+    val r: UByte,
+    val g: UByte,
+    val b: UByte,
+    val a: UByte = 0xFF.toUByte(),
+) {
+    fun getHash() = (r.toInt() * 3 + g.toInt() * 5 + b.toInt() * 7 + a.toInt() * 11) % 64
+    fun getBytes(channels: Int) = when {
+        (channels == 4) -> byteArrayOf(r.toByte(), g.toByte(), b.toByte(), a.toByte())
+        else -> byteArrayOf(r.toByte(), g.toByte(), b.toByte())
+    }
 
     operator fun minus(pixel: QoiPixel): QoiPixel {
         return QoiPixel(
@@ -43,16 +41,22 @@ data class QoiPixel(val r: UByte, val g: UByte, val b: UByte, val a: UByte = 0xF
  * @param colorSpace: The color space of the image -
  *                    i.e., either sRGB with linear alpha or all channels linear
  */
-data class QoiImage(val pixels: UByteArray, val width: Int, val height: Int, val channels: Int, val colorSpace: QoiColorSpace = QoiColorSpace.sRGB) {
+data class QoiImage(
+    val pixels: UByteArray,
+    val width: Int,
+    val height: Int,
+    val channels: Int,
+    val colorSpace: QoiColorSpace = QoiColorSpace.sRGB
+) {
     val size = pixels.size
-    val QOI_PIXEL_PREFIX = if (channels == 4) QOICodec.QOI_OP_RGBA else QOICodec.QOI_OP_RGB
+    val QOI_PIXEL_PREFIX = if (channels == 4) QoiCodec.QOI_OP_RGBA else QoiCodec.QOI_OP_RGB
 
     /**
      * Returns the 14-byte QOI header containing information about the image
      */
     fun getQoiHeader(): ByteArray {
         val header = ByteBuffer.allocate(14)
-        header.putInt(QOICodec.QOI_MAGIC)
+        header.putInt(QoiCodec.QOI_MAGIC)
         header.putInt(width)
         header.putInt(height)
         header.put(channels.toByte())
@@ -97,10 +101,10 @@ data class QoiImage(val pixels: UByteArray, val width: Int, val height: Int, val
 
         /**
          * Loads an image from a file into a new Image object
-         * @param imagePath: The absolute or relative path to the image file
+         * @param imageFile: The image file
          */
-        fun fromFile(imagePath: String): QoiImage {
-            val image: BufferedImage = ImageIO.read(File(imagePath))
+        fun fromFile(imageFile: File): QoiImage {
+            val image: BufferedImage = ImageIO.read(imageFile)
             return fromBufferedImage(image)
         }
     }
